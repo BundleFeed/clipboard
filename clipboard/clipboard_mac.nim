@@ -6,6 +6,11 @@ import darwin/app_kit
 type MacClipboard = ref object of Clipboard
   p: NSPasteboard
 
+proc `destroy=`*(p: var MacClipboard) =
+  if not p.isNil and not p.p.isNil:
+    p.p.release()
+    p.p = nil
+
 const NonUtiPrefix = "nim-clip."
 
 proc finalizePboard(p: MacClipboard) = p.p.release()
@@ -133,7 +138,7 @@ proc pbAvailableFormats(pb: Clipboard, o: var HashSet[string]) =
 
 proc clipboardWithName*(name: string): Clipboard =
   var res: MacClipboard
-  res.new(finalizePboard)
+  
   res.p = NSPasteboard.withName(nativePboardName(name)).retain()
   res.writeImpl = pbWrite
   res.readImpl = pbRead
